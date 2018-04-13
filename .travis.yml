@@ -6,8 +6,5 @@ python:
  - "3.5"
  - "3.6"
  - "pypy"
-install:
- - pip install -q  -r dev_requirements.txt
-script:
- - python -m unittest discover telegraf
- - flake8 telegraf/
+install: pip install tox-travis
+script: tox
