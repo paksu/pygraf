@@ -118,7 +118,8 @@ telegraf.metric('some-metric', 1)
 
 - Clone or fork this repo
 - Make changes
-- Run tests with `python setup.py test`
+- Install `tox` package
+- Run tests with `tox`
 - Submit a pull request
 
 ### Contributors
