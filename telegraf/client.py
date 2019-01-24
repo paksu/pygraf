@@ -1,6 +1,20 @@
-from abc import abstractmethod
-from telegraf.protocol import Line
 import socket
+from abc import abstractmethod
+from functools import wraps
+from time import time
+
+from telegraf.protocol import Line
+from telegraf.utils import is_higher_py35
+
+if is_higher_py35():
+    from telegraf.context import wrapped_coroutine
+    from asyncio import iscoroutinefunction
+else:
+    def wrapped_coroutine(self, func):
+        raise NotImplementedError(u"Async timer decorator requires Python 3.5 or higher.")
+
+    def iscoroutinefunction(*args, **kwargs):
+        return False
 
 
 class ClientBase(object):
@@ -27,6 +41,9 @@ class ClientBase(object):
         # Create a metric line from the input and then send it to socket
         line = Line(measurement_name, values, all_tags, timestamp)
         self.send(line.to_line_protocol())
+
+    def timer(self, measurement_name, tags=None, use_ms=False):
+        return TimerHelper(self, measurement_name=measurement_name, tags=tags, use_ms=use_ms)
 
     @abstractmethod
     def send(self, data):
@@ -77,3 +94,50 @@ class HttpClient(ClientBase):
         this issues the request in the background.
         """
         self.future_session.post(url=self.url, data=data)
+
+
+class TimerHelper(object):
+    def __init__(self, client, measurement_name=None, tags=None, use_ms=False):
+        self.client = client
+        self.measurement_name = measurement_name
+        self.tags = tags or {}
+        self.use_ms = use_ms
+
+    def __call__(self, func):
+        """Decorator helper for timing function calls."""
+        if not self.measurement_name:
+            self.measurement_name = '%s.%s' % (func.__module__, func.__name__)
+
+        # Coroutines
+        if iscoroutinefunction(func):
+            return wrapped_coroutine(self, func)
+
+        @wraps(func)
+        def wrapped(*args, **kwargs):
+            start = time()
+            try:
+                return func(*args, **kwargs)
+            finally:
+                self._send(start)
+        return wrapped
+
+    def __enter__(self):
+        if not self.measurement_name:
+            raise TypeError("No metric name specified.")
+        self.start_time = time()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        # Report the elapsed time of the context manager.
+        self._send(self.start_time)
+
+    def _send(self, start_time):
+        elapsed = time() - start_time
+        tags = self.tags.copy()
+        if self.use_ms:
+            elapsed = int(round(1000 * elapsed))
+            tags['units'] = 'ms'
+        else:
+            tags['units'] = 's'
+        line = Line(self.measurement_name, elapsed, tags, None)
+        self.client.send(line.to_line_protocol())

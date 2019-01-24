@@ -1,9 +1,8 @@
 from __future__ import absolute_import
-from django.conf import settings
 
+from django.conf import settings
 from telegraf import defaults
 from telegraf.client import TelegrafClient
-
 
 telegraf = None
 

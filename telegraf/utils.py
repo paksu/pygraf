@@ -1,3 +1,5 @@
+import sys
+
 try:
     basestring
 except NameError:
@@ -46,3 +48,8 @@ def format_value(value):
     elif isinstance(value, float):
         value = str(value)
     return value
+
+
+def is_higher_py35():
+    """Check that the Python is version 3.5 or higher."""
+    return sys.version_info >= (3, 5)

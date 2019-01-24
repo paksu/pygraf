@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from telegraf.client import ClientBase, TelegrafClient, HttpClient
+import unittest
+
+import mock
+from telegraf.client import ClientBase, HttpClient, TelegrafClient
 from telegraf.protocol import Line
 from telegraf.utils import format_string, format_value
-import unittest
-import mock
 
 
 class TestLine(unittest.TestCase):
