@@ -37,6 +37,19 @@ client.metric('some_metric', {'value_a': 100, 'value_b': 100, 'value_c': True})
 
 # Records a single value with one tag
 client.metric('some_metric', 123, tags={'server_name': 'my-server'})
+
+# Times a function call. The measurement name defaults to __module__.__func__
+@client.timer('some_metric', tags={'server_name':'my-server'})
+def some_operation():
+    pass
+
+# Uses a context manager to time an operation
+with client.timer('some_metric'):
+    time.sleep(2)
+
+# As above, but time in milliseconds
+with client.timer('some_metric', use_ms=True):
+    time.sleep(2)
 ```
 
 #### Global tags
