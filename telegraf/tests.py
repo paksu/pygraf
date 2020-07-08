@@ -22,8 +22,10 @@ class TestLine(unittest.TestCase):
         self.assertEquals(format_value('foo "and" bar'), '"foo \"and\" bar"')
         self.assertEquals(format_value(123), "123i")
         self.assertEquals(format_value(123.123), "123.123")
-        self.assertEquals(format_value(True), "True")
-        self.assertEquals(format_value(False), "False")
+        self.assertEquals(format_value(True), "t")
+        self.assertEquals(format_value(False), "f")
+        oversixtyfourk_str = u''.join([chr(32 + (i % 767)) for i in range(0, 300 + 2**16)])
+        self.assertLess(len(format_value(oversixtyfourk_str).encode('utf-8')), 2**16)
 
     def test_single_value(self):
         self.assertEquals(
@@ -62,7 +64,7 @@ class TestLine(unittest.TestCase):
     def test_boolean_value(self):
         self.assertEquals(
             Line('some_series', True).to_line_protocol(),
-            'some_series value=True'
+            'some_series value=t'
         )
 
     def test_value_escaped_and_quoted(self):
@@ -81,6 +83,12 @@ class TestLine(unittest.TestCase):
         self.assertEquals(
             Line('some_series', 1, {'a': 1, 'baa': 1, 'AAA': 1, 'aaa': 1}).to_line_protocol(),
             'some_series,AAA=1,a=1,aaa=1,baa=1 value=1i'
+        )
+
+    def test_tags_filter_invalid_tags(self):
+        self.assertEquals(
+            Line('some_series', 1, {'a': 1, "invalid1": "", "invalid2": None, "_invalid3": "invalidvalue"}).to_line_protocol(),
+            'some_series,a=1 value=1i'
         )
 
     def test_values_ordered_properly(self):
