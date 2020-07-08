@@ -50,9 +50,13 @@ class Line(object):
         Tags should be sorted by key before being sent for best performance. The sort should
         match that from the Go bytes. Compare function (http://golang.org/pkg/bytes/#Compare).
         """
+        def f(tag):
+            return not tag[0].startswith("_") and tag[1] not in ("", None)
+
+        filtered_tags = dict(filter(f, self.tags.items()))
 
         # Sort the tags in lexicographically by tag name
-        sorted_tags = sorted(self.tags.items())
+        sorted_tags = sorted(filtered_tags)
 
         # Finally render, escape and return the tag string
         return u",".join(u"{0}={1}".format(format_string(k), format_string(v)) for k, v in sorted_tags)
