@@ -33,14 +33,23 @@ def format_value(value):
     Boolean values indicate true or false. Valid boolean strings for line protocol are
     (t, T, true, True, TRUE, f, F, false, False and FALSE).
 
+    Note: boolean syntax varies between write and query.
+        see https://docs.influxdata.com/influxdb/v1.8/troubleshooting/frequently-asked-questions/#why-can-t-i-query-boolean-field-values
+
     Strings are text values. All string field values must be surrounded in double-quotes ".
     If the string contains a double-quote, the double-quote must be escaped with a backslash, e.g. \".
+    Strings are required to be under 64KB
+
     """
     if isinstance(value, basestring):
         value = value.replace('"', '\"')
         value = u'"{0}"'.format(value)
+        # trim string value until it is under 64K
+        while len(value.encode('utf-8')) > 2**16:
+            value = value[:-2]
     elif isinstance(value, bool):
-        value = str(value)
+        # we save a small number of bytes here
+        value = "t" if value else "f"
     elif isinstance(value, int):
         value = "{0}i".format(value)
     elif isinstance(value, float):
