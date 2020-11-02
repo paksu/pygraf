@@ -58,8 +58,6 @@ class Line(object):
         # Sort the tags in lexicographically by tag name
         sorted_tags = sorted(filtered_tags.items())
 
-        print(sorted_tags)
-
         # Finally render, escape and return the tag string
         return u",".join(u"{0}={1}".format(format_string(k), format_string(v)) for k, v in sorted_tags)
 
